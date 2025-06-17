@@ -2,6 +2,7 @@ import os
 import json
 import smtplib
 import redis
+from datetime import datetime
 from email.mime.text import MIMEText
 from jinja2 import Environment, FileSystemLoader
 
@@ -10,7 +11,6 @@ SMTP_HOST = os.environ.get("SMTP_HOST")
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
 SMTP_USER = os.environ.get("SMTP_USER")
 SMTP_PASS = os.environ.get("SMTP_PASS")
-SMTP_SENDER = os.environ.get("SMTP_SENDER") or f"no-reply@{SMTP_USER.split('@')[1]}" if SMTP_USER and '@' in SMTP_USER else "no-reply@example.com"
 SMTP_SENDER_NAME = os.environ.get("TITLE", "Emailer")
 
 # Configuração do Redis
@@ -19,19 +19,21 @@ QUEUE_NAME = "email:send"
 
 # Configuração dos templates
 env = Environment(loader=FileSystemLoader("./templates"))
+env.globals['now'] = datetime.now 
 
 def send_email(to, subject, html):
     msg = MIMEText(html, "html")
     msg["Subject"] = subject
-    msg["From"] = f"{SMTP_SENDER_NAME} <{SMTP_SENDER}>"
+    msg["From"] = f"{SMTP_SENDER_NAME} <{SMTP_USER}>"
     msg["To"] = to
+    print(f"[DEV EMAIL] To: {to}\nSubject: {subject}\nFrom: {SMTP_SENDER_NAME} <{SMTP_USER}>\n\n{html}")
     if not SMTP_HOST:
-        print(f"[DEV EMAIL] To: {to}\nSubject: {subject}\nFrom: {SMTP_SENDER_NAME} <{SMTP_SENDER}>\n\n{html}")
+        print(f"[DEV EMAIL] To: {to}\nSubject: {subject}\nFrom: {SMTP_SENDER_NAME} <{SMTP_USER}>\n\n{html}")
         return
     with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
         server.starttls()
         server.login(SMTP_USER, SMTP_PASS)
-        server.sendmail(SMTP_SENDER, [to], msg.as_string())
+        server.sendmail(SMTP_USER, [to], msg.as_string())
 
 def main():
     r = redis.Redis.from_url(REDIS_URL)
@@ -39,6 +41,7 @@ def main():
 
     while True:
         _, raw = r.blpop(QUEUE_NAME)
+        print(f"Received raw message from queue: {raw}")
         payload = json.loads(raw)
         to = payload["to"]
         subject = payload["subject"]
