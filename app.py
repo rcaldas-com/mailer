@@ -26,7 +26,6 @@ def send_email(to, subject, html):
     msg["Subject"] = subject
     msg["From"] = f"{SMTP_SENDER_NAME} <{SMTP_USER}>"
     msg["To"] = to
-    print(f"[DEV EMAIL] To: {to}\nSubject: {subject}\nFrom: {SMTP_SENDER_NAME} <{SMTP_USER}>\n\n{html}")
     if not SMTP_HOST:
         print(f"[DEV EMAIL] To: {to}\nSubject: {subject}\nFrom: {SMTP_SENDER_NAME} <{SMTP_USER}>\n\n{html}")
         return
