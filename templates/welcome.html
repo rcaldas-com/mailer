@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bem-vindo ao Car App!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      /* Reset básico */
+      body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+      img { -ms-interpolation-mode: bicubic; }
+      body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; }
+      /* Layout responsivo */
+      .container {
+        max-width: 420px;
+        margin: 0 auto;
+        background: #f9fafb;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        padding: 32px 20px;
+        font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      }
+      .logo {
+        display: block;
+        margin: 0 auto 24px auto;
+        width: 64px;
+        height: 64px;
+        background: #16a34a;
+        border-radius: 16px;
+        text-align: center;
+        line-height: 64px;
+        font-size: 2rem;
+        color: #fff;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+      h1 {
+        font-size: 1.5rem;
+        color: #22223b;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+      p {
+        color: #4b5563;
+        font-size: 1rem;
+        margin-bottom: 24px;
+        text-align: center;
+      }
+      .button {
+        display: block;
+        width: 100%;
+        background: #16a34a;
+        color: #fff !important;
+        text-decoration: none;
+        padding: 14px 0;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 24px;
+        box-shadow: 0 2px 8px rgba(22,163,74,0.08);
+        transition: background 0.2s;
+      }
+      .button:hover {
+        background: #15803d;
+      }
+      .features {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 24px 0;
+        border: 1px solid #e5e7eb;
+      }
+      .feature-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+        color: #374151;
+      }
+      .feature-item:last-child {
+        margin-bottom: 0;
+      }
+      .feature-icon {
+        width: 20px;
+        height: 20px;
+        background: #16a34a;
+        border-radius: 50%;
+        margin-right: 12px;
+        display: inline-block;
+      }
+      .footer {
+        font-size: 0.9rem;
+        color: #9ca3af;
+        text-align: center;
+        margin-top: 24px;
+      }
+      @media (max-width: 480px) {
+        .container { padding: 18px 4vw; }
+        .logo { width: 48px; height: 48px; line-height: 48px; font-size: 1.3rem; }
+      }
+    </style>
+  </head>
+  <body style="background: #e0e7ef;">
+    <div class="container">
+      <div class="logo">
+        CAR
+      </div>
+      <h1>🎉 Bem-vindo ao Car App!</h1>
+      <p>Olá, <b>{{ name }}</b>!<br>
+        Sua conta foi criada com sucesso!<br>
+        Agora você pode começar a gerenciar seus veículos.
+      </p>
+      
+      <div class="features">
+        <div class="feature-item">
+          <span class="feature-icon"></span>
+          <span>Controle completo de veículos</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"></span>
+          <span>Histórico de manutenções</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"></span>
+          <span>Lista de desejos de carros</span>
+        </div>
+        <div class="feature-item">
+          <span class="feature-icon"></span>
+          <span>Relatórios detalhados</span>
+        </div>
+      </div>
+
+      <a href="{{ loginUrl }}" class="button" target="_blank">
+        Fazer Login e Começar
+      </a>
+      
+      <p style="font-size:0.95rem; color:#6b7280;">
+        Explore todas as funcionalidades e mantenha seus veículos sempre organizados!<br>
+        Se precisar de ajuda, nossa equipe está sempre disponível.
+      </p>
+      
+      <div class="footer">
+        Equipe Car App<br>
+        &copy; {{ app|capitalize }} {{ now().year }}
+      </div>
+    </div>
+  </body>
+</html>
