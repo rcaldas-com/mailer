@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Confirme seu email - Car App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      /* Reset básico */
+      body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+      img { -ms-interpolation-mode: bicubic; }
+      body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; }
+      /* Layout responsivo */
+      .container {
+        max-width: 420px;
+        margin: 0 auto;
+        background: #f9fafb;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        padding: 32px 20px;
+        font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      }
+      .logo {
+        display: block;
+        margin: 0 auto 24px auto;
+        width: 64px;
+        height: 64px;
+        background: #2563eb;
+        border-radius: 16px;
+        text-align: center;
+        line-height: 64px;
+        font-size: 2rem;
+        color: #fff;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+      h1 {
+        font-size: 1.5rem;
+        color: #22223b;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+      p {
+        color: #4b5563;
+        font-size: 1rem;
+        margin-bottom: 24px;
+        text-align: center;
+      }
+      .button {
+        display: block;
+        margin: 24px auto;
+        padding: 14px 32px;
+        background: #2563eb;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        text-align: center;
+        transition: background 0.3s ease;
+      }
+      .button:hover {
+        background: #1e40af;
+      }
+      .link {
+        color: #2563eb;
+        word-break: break-all;
+        font-size: 0.875rem;
+        text-decoration: underline;
+      }
+      .footer {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+        font-size: 0.75rem;
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">{{ app|upper }}</div>
+      <h1>Bem-vindo, {{ name }}! 👋</h1>
+      <p>
+        Obrigado por se cadastrar no <strong>Car App</strong>. Para ativar sua conta e começar a gerenciar seus veículos, 
+        por favor confirme seu email clicando no botão abaixo:
+      </p>
+      <a href="{{ verificationUrl }}" class="button">Confirmar Email</a>
+      <p style="font-size: 0.875rem; color: #6b7280;">
+        Ou copie e cole este link no seu navegador:<br>
+        <a href="{{ verificationUrl }}" class="link">{{ verificationUrl }}</a>
+      </p>
+      <div class="footer">
+        <p style="margin: 8px 0;">
+          Se você não se cadastrou no Car App, ignore este email.
+        </p>
+        <p style="margin: 8px 0; font-weight: 500; color: #ef4444;">
+          ⚠️ Este link expira em 24 horas.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
