@@ -2,7 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <title>Bem-vindo ao Car App!</title>
+    <title>Bem-vindo!</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
       /* Reset básico */
@@ -104,12 +104,12 @@
   <body style="background: #e0e7ef;">
     <div class="container">
       <div class="logo">
-        CAR
+        {{ logo|default('CAR') }}
       </div>
-      <h1>🎉 Bem-vindo ao Car App!</h1>
+      <h1>Bem-vindo!</h1>
       <p>Olá, <b>{{ name }}</b>!<br>
         Sua conta foi criada com sucesso!<br>
-        Agora você pode começar a gerenciar seus veículos.
+        Agora você pode começar a usar {{ app|default('o sistema') }}.
       </p>
       
       <div class="features">
@@ -136,13 +136,13 @@
       </a>
       
       <p style="font-size:0.95rem; color:#6b7280;">
-        Explore todas as funcionalidades e mantenha seus veículos sempre organizados!<br>
+        Explore todas as funcionalidades disponíveis para sua conta.<br>
         Se precisar de ajuda, nossa equipe está sempre disponível.
       </p>
       
       <div class="footer">
-        Equipe Car App<br>
-        &copy; {{ app|capitalize }} {{ now().year }}
+        {{ app|capitalize }}<br>
+        &copy; {{ now().year }}
       </div>
     </div>
   </body>

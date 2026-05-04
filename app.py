@@ -5,40 +5,79 @@ import redis
 import time
 from datetime import datetime
 from email.mime.text import MIMEText
+from email.utils import formataddr
 from jinja2 import Environment, FileSystemLoader
 
 # Configurações do SMTP
-SMTP_HOST = os.environ.get("SMTP_HOST")
-SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
-SMTP_USER = os.environ.get("SMTP_USER")
-SMTP_PASS = os.environ.get("SMTP_PASS")
+SMTP_HOST = os.environ.get("SMTP_HOST") or os.environ.get("MAIL_HOST") or os.environ.get("MAIL_SERVER")
+SMTP_PORT = int(os.environ.get("SMTP_PORT") or os.environ.get("MAIL_PORT") or 587)
+SMTP_USER = os.environ.get("SMTP_USER") or os.environ.get("MAIL_USERNAME") or os.environ.get("MAIL_USER")
+SMTP_PASS = os.environ.get("SMTP_PASS") or os.environ.get("MAIL_PASSWORD") or os.environ.get("MAIL_PASS")
+SMTP_USE_SSL = (os.environ.get("SMTP_SSL") or os.environ.get("MAIL_USE_SSL") or "false").lower() in ("1", "true", "yes")
+SMTP_USE_TLS = (os.environ.get("SMTP_TLS") or os.environ.get("MAIL_USE_TLS") or "true").lower() in ("1", "true", "yes")
 SMTP_SENDER_NAME = os.environ.get("TITLE", "Emailer")
+SMTP_FROM = os.environ.get("SMTP_FROM") or os.environ.get("MAIL_FROM") or SMTP_USER
+SMTP_TIMEOUT = int(os.environ.get("SMTP_TIMEOUT", 30))
+EMAIL_DEBUG = os.environ.get("EMAIL_DEBUG", "false").lower() in ("1", "true", "yes")
 
 # Configuração do Redis
 REDIS_URL = os.environ.get("REDIS_URL", "redis://redis")
 QUEUE_NAME = "email:send"
 PROCESSING_QUEUE = "email:processing"
 ERROR_QUEUE = "email:error"
+TEMPLATE_ALIASES = {
+    "verification": "verify-email",
+}
 
 # Configuração dos templates
 env = Environment(loader=FileSystemLoader("./templates"))
 env.globals['now'] = datetime.now 
 
+def mask(value):
+    if not value:
+        return "(vazio)"
+    if len(value) <= 4:
+        return "****"
+    return f"{value[:2]}***{value[-2:]}"
+
+def log_config():
+    mode = "SMTP" if SMTP_HOST else "DRY-RUN"
+    print(f"Email worker iniciado em modo {mode}")
+    print(f"SMTP host: {SMTP_HOST or '(nao configurado)'}")
+    print(f"SMTP port: {SMTP_PORT}")
+    print(f"SMTP TLS: {SMTP_USE_TLS} | SSL: {SMTP_USE_SSL}")
+    print(f"SMTP user: {mask(SMTP_USER)}")
+    print(f"SMTP from: {SMTP_FROM or '(nao configurado)'}")
+    if not SMTP_HOST:
+        print("⚠️  SMTP_HOST/MAIL_HOST/MAIL_SERVER nao configurado: emails serao apenas impressos no log.")
+    if SMTP_HOST and (not SMTP_USER or not SMTP_PASS):
+        print("⚠️  SMTP configurado sem usuario/senha. Login sera ignorado.")
+
 def send_email(to, subject, html):
-    """Envia email via SMTP ou imprime no console em desenvolvimento"""
-    msg = MIMEText(html, "html")
+    """Envia email via SMTP ou imprime no console quando SMTP nao estiver configurado."""
+    msg = MIMEText(html, "html", "utf-8")
     msg["Subject"] = subject
-    msg["From"] = f"{SMTP_SENDER_NAME} <{SMTP_USER}>"
+    msg["From"] = formataddr((SMTP_SENDER_NAME, SMTP_FROM or "no-reply@localhost"))
     msg["To"] = to
     
     if not SMTP_HOST:
-        print(f"[DEV EMAIL] To: {to}\nSubject: {subject}\nFrom: {SMTP_SENDER_NAME} <{SMTP_USER}>\n\n{html}")
-        return
+        print(f"[DRY-RUN EMAIL] To: {to}\nSubject: {subject}\nFrom: {msg['From']}\n\n{html}")
+        return "dry-run"
         
-    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASS)
-        server.sendmail(SMTP_USER, [to], msg.as_string())
+    smtp_class = smtplib.SMTP_SSL if SMTP_USE_SSL else smtplib.SMTP
+    with smtp_class(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT) as server:
+        if EMAIL_DEBUG:
+            server.set_debuglevel(1)
+        server.ehlo()
+        if SMTP_USE_TLS and not SMTP_USE_SSL:
+            server.starttls()
+            server.ehlo()
+        if SMTP_USER and SMTP_PASS:
+            server.login(SMTP_USER, SMTP_PASS)
+        refused = server.sendmail(SMTP_FROM or SMTP_USER, [to], msg.as_string())
+        if refused:
+            raise RuntimeError(f"SMTP recusou destinatarios: {refused}")
+    return "smtp"
 
 def process_email(r, email_data):
     """Processa um email individual com tratamento de erro"""
@@ -46,16 +85,23 @@ def process_email(r, email_data):
         payload = json.loads(email_data)
         to = payload["to"]
         subject = payload["subject"]
-        template_name = payload["template"]
+        template_name = TEMPLATE_ALIASES.get(payload["template"], payload["template"])
         variables = payload.get("variables", {})
+        if "verificationUrl" in variables and "verifyUrl" not in variables:
+            variables["verifyUrl"] = variables["verificationUrl"]
+        if "verifyUrl" in variables and "verificationUrl" not in variables:
+            variables["verificationUrl"] = variables["verifyUrl"]
 
         # Renderiza o template
         template = env.get_template(f"{template_name}.html")
         html = template.render(**variables)
 
         # Envia o email
-        send_email(to, subject, html)
-        print(f"✅ E-mail enviado para {to} ({subject})")
+        delivery_mode = send_email(to, subject, html)
+        if delivery_mode == "smtp":
+            print(f"✅ SMTP aceitou email para {to} ({subject})")
+        else:
+            print(f"🧪 Email para {to} ({subject}) ficou em dry-run; nada foi enviado.")
         return True
         
     except Exception as e:
@@ -134,7 +180,8 @@ def retry_failed_emails(r, max_retries=3):
 
 def main():
     r = redis.Redis.from_url(REDIS_URL)
-    print("Email worker iniciado. Aguardando mensagens...")
+    log_config()
+    print("Aguardando mensagens...")
     
     # Recupera emails que estavam sendo processados
     recover_processing_queue(r)
