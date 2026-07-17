@@ -5,7 +5,7 @@ import redis
 import time
 from datetime import datetime
 from email.mime.text import MIMEText
-from email.utils import formataddr
+from email.utils import formataddr, make_msgid
 from jinja2 import Environment, FileSystemLoader
 
 # Configurações do SMTP
@@ -55,10 +55,14 @@ def log_config():
 
 def send_email(to, subject, html):
     """Envia email via SMTP ou imprime no console quando SMTP nao estiver configurado."""
+    from_addr = SMTP_FROM or "no-reply@localhost"
+    domain = from_addr.split("@")[-1] if "@" in from_addr else "localhost"
     msg = MIMEText(html, "html", "utf-8")
     msg["Subject"] = subject
-    msg["From"] = formataddr((SMTP_SENDER_NAME, SMTP_FROM or "no-reply@localhost"))
+    msg["From"] = formataddr((SMTP_SENDER_NAME, from_addr))
     msg["To"] = to
+    msg["Message-ID"] = make_msgid(domain=domain)
+    msg["Date"] = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S +0000")
     
     if not SMTP_HOST:
         print(f"[DRY-RUN EMAIL] To: {to}\nSubject: {subject}\nFrom: {msg['From']}\n\n{html}")
