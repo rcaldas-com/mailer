@@ -183,7 +183,7 @@ def retry_failed_emails(r, max_retries=3):
         print(f"🔄 {retried_count} emails reenviados para processamento")
 
 def main():
-    r = redis.Redis.from_url(REDIS_URL)
+    r = redis.Redis.from_url(REDIS_URL, socket_timeout=None, socket_connect_timeout=30)
     log_config()
     print("Aguardando mensagens...")
     
