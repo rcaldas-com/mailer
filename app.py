@@ -199,7 +199,8 @@ def main():
     while True:
         try:
             # Move email da fila principal para fila de processamento (atomico)
-            email_data = r.brpoplpush(QUEUE_NAME, PROCESSING_QUEUE, timeout=0)
+            # blmove substitui brpoplpush removido no Redis 7+
+            email_data = r.blmove(QUEUE_NAME, PROCESSING_QUEUE, 0, 'RIGHT', 'LEFT')
             print(f"📧 Processando email: {email_data}")
             
             # Processa o email
