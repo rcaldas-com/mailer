@@ -3,9 +3,10 @@ import json
 import smtplib
 import redis
 import time
-import base64
-from datetime import datetime
+from datetime import datetime, timezone
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from email.utils import formataddr, make_msgid
 from jinja2 import Environment, FileSystemLoader, ChoiceLoader
 
@@ -41,22 +42,25 @@ if TEMPLATE_PREFIX:
 env = Environment(loader=ChoiceLoader(_loaders))
 env.globals['now'] = datetime.now
 
-# Logo embutido em base64 para que o email seja auto-contido
-# Procura em templates/{prefix}/ primeiro, depois em templates/
+# Logo como CID inline attachment — compatível com Gmail, Outlook, etc.
+# data: URIs são bloqueados pela maioria dos clientes de email por segurança
 _logo_candidates = []
 if TEMPLATE_PREFIX:
     _logo_candidates += [f"./templates/{TEMPLATE_PREFIX}/logo.png", f"./templates/{TEMPLATE_PREFIX}/logo.svg"]
 _logo_candidates += ["./templates/logo.png", "./templates/logo.svg"]
 
 _logo_path = os.environ.get("LOGO_PATH") or next((p for p in _logo_candidates if os.path.exists(p)), None)
+_logo_data = None
+_logo_subtype = None
 if _logo_path and os.path.exists(_logo_path):
     _ext = _logo_path.rsplit(".", 1)[-1].lower()
-    _mime = "image/svg+xml" if _ext == "svg" else f"image/{_ext}"
+    _logo_subtype = "svg+xml" if _ext == "svg" else _ext
     with open(_logo_path, "rb") as _f:
-        env.globals['logo_b64'] = f"data:{_mime};base64,{base64.b64encode(_f.read()).decode()}"
+        _logo_data = _f.read()
+    env.globals['logo_cid'] = 'cid:logo@emailer'
     print(f"✅ Logo carregado: {_logo_path}")
 else:
-    env.globals['logo_b64'] = None
+    env.globals['logo_cid'] = None
     print(f"⚠️  Logo não encontrado: emails sem logo")
 
 def mask(value):
@@ -83,12 +87,24 @@ def send_email(to, subject, html):
     """Envia email via SMTP ou imprime no console quando SMTP nao estiver configurado."""
     from_addr = SMTP_FROM or "no-reply@localhost"
     domain = from_addr.split("@")[-1] if "@" in from_addr else "localhost"
-    msg = MIMEText(html, "html", "utf-8")
+
+    if _logo_data:
+        msg = MIMEMultipart('related')
+        alt = MIMEMultipart('alternative')
+        msg.attach(alt)
+        alt.attach(MIMEText(html, 'html', 'utf-8'))
+        logo_part = MIMEImage(_logo_data, _subtype=_logo_subtype)
+        logo_part.add_header('Content-ID', '<logo@emailer>')
+        logo_part.add_header('Content-Disposition', 'inline', filename='logo')
+        msg.attach(logo_part)
+    else:
+        msg = MIMEText(html, "html", "utf-8")
+
     msg["Subject"] = subject
     msg["From"] = formataddr((SMTP_SENDER_NAME, from_addr))
     msg["To"] = to
     msg["Message-ID"] = make_msgid(domain=domain)
-    msg["Date"] = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S +0000")
+    msg["Date"] = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S +0000")
     
     if not SMTP_HOST:
         print(f"[DRY-RUN EMAIL] To: {to}\nSubject: {subject}\nFrom: {msg['From']}\n\n{html}")
