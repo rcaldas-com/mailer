@@ -7,7 +7,7 @@ import base64
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.utils import formataddr, make_msgid
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, ChoiceLoader
 
 # Configurações do SMTP
 SMTP_HOST = os.environ.get("SMTP_HOST") or os.environ.get("MAIL_HOST") or os.environ.get("MAIL_SERVER")
@@ -30,13 +30,26 @@ TEMPLATE_ALIASES = {
     "verification": "verify-email",
 }
 
-# Configuração dos templates
-env = Environment(loader=FileSystemLoader("./templates"))
+# Template prefix para templates e logo específicos do projeto (ex: "car", "rcaldas")
+TEMPLATE_PREFIX = os.environ.get("TEMPLATE_PREFIX", "")
+
+# ChoiceLoader: templates do projeto primeiro, templates compartilhados como fallback
+_loaders = [FileSystemLoader("./templates")]
+if TEMPLATE_PREFIX:
+    _loaders.insert(0, FileSystemLoader(f"./templates/{TEMPLATE_PREFIX}"))
+
+env = Environment(loader=ChoiceLoader(_loaders))
 env.globals['now'] = datetime.now
 
 # Logo embutido em base64 para que o email seja auto-contido
-_logo_path = os.environ.get("LOGO_PATH", "./templates/logo.png")
-if os.path.exists(_logo_path):
+# Procura em templates/{prefix}/ primeiro, depois em templates/
+_logo_candidates = []
+if TEMPLATE_PREFIX:
+    _logo_candidates += [f"./templates/{TEMPLATE_PREFIX}/logo.png", f"./templates/{TEMPLATE_PREFIX}/logo.svg"]
+_logo_candidates += ["./templates/logo.png", "./templates/logo.svg"]
+
+_logo_path = os.environ.get("LOGO_PATH") or next((p for p in _logo_candidates if os.path.exists(p)), None)
+if _logo_path and os.path.exists(_logo_path):
     _ext = _logo_path.rsplit(".", 1)[-1].lower()
     _mime = "image/svg+xml" if _ext == "svg" else f"image/{_ext}"
     with open(_logo_path, "rb") as _f:
@@ -44,7 +57,7 @@ if os.path.exists(_logo_path):
     print(f"✅ Logo carregado: {_logo_path}")
 else:
     env.globals['logo_b64'] = None
-    print(f"⚠️  Logo não encontrado em {_logo_path}: emails sem logo")
+    print(f"⚠️  Logo não encontrado: emails sem logo")
 
 def mask(value):
     if not value:
