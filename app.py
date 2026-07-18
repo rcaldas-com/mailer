@@ -5,8 +5,6 @@ import redis
 import time
 from datetime import datetime, timezone
 from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from email.mime.image import MIMEImage
 from email.utils import formataddr, make_msgid
 from jinja2 import Environment, FileSystemLoader, ChoiceLoader
 
@@ -42,26 +40,19 @@ if TEMPLATE_PREFIX:
 env = Environment(loader=ChoiceLoader(_loaders))
 env.globals['now'] = datetime.now
 
-# Logo como CID inline attachment — compatível com Gmail, Outlook, etc.
-# data: URIs são bloqueados pela maioria dos clientes de email por segurança
-_logo_candidates = []
-if TEMPLATE_PREFIX:
-    _logo_candidates += [f"./templates/{TEMPLATE_PREFIX}/logo.png", f"./templates/{TEMPLATE_PREFIX}/logo.svg"]
-_logo_candidates += ["./templates/logo.png", "./templates/logo.svg"]
+# Logo via URL pública do Next.js (public/logo.png) — funciona em todos os clientes incluindo Gmail
+_app_url = (
+    os.environ.get("AUTH_TRUST_HOST") or
+    os.environ.get("NEXTAUTH_URL") or
+    os.environ.get("APP_URL") or
+    ""
+).rstrip("/")
 
-_logo_path = os.environ.get("LOGO_PATH") or next((p for p in _logo_candidates if os.path.exists(p)), None)
-_logo_data = None
-_logo_subtype = None
-if _logo_path and os.path.exists(_logo_path):
-    _ext = _logo_path.rsplit(".", 1)[-1].lower()
-    _logo_subtype = "svg+xml" if _ext == "svg" else _ext
-    with open(_logo_path, "rb") as _f:
-        _logo_data = _f.read()
-    env.globals['logo_cid'] = 'cid:logo@emailer'
-    print(f"✅ Logo carregado: {_logo_path}")
+env.globals['logo_url'] = f"{_app_url}/logo.png" if _app_url else None
+if env.globals['logo_url']:
+    print(f"✅ Logo URL: {env.globals['logo_url']}")
 else:
-    env.globals['logo_cid'] = None
-    print(f"⚠️  Logo não encontrado: emails sem logo")
+    print("⚠️  AUTH_TRUST_HOST não configurado: emails sem logo")
 
 def mask(value):
     if not value:
@@ -88,18 +79,7 @@ def send_email(to, subject, html):
     from_addr = SMTP_FROM or "no-reply@localhost"
     domain = from_addr.split("@")[-1] if "@" in from_addr else "localhost"
 
-    if _logo_data:
-        msg = MIMEMultipart('related')
-        alt = MIMEMultipart('alternative')
-        msg.attach(alt)
-        alt.attach(MIMEText(html, 'html', 'utf-8'))
-        logo_part = MIMEImage(_logo_data, _subtype=_logo_subtype)
-        logo_part.add_header('Content-ID', '<logo@emailer>')
-        logo_part.add_header('Content-Disposition', 'inline', filename='logo')
-        msg.attach(logo_part)
-    else:
-        msg = MIMEText(html, "html", "utf-8")
-
+    msg = MIMEText(html, "html", "utf-8")
     msg["Subject"] = subject
     msg["From"] = formataddr((SMTP_SENDER_NAME, from_addr))
     msg["To"] = to
