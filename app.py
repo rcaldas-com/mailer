@@ -3,6 +3,7 @@ import json
 import smtplib
 import redis
 import time
+import base64
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.utils import formataddr, make_msgid
@@ -31,7 +32,19 @@ TEMPLATE_ALIASES = {
 
 # Configuração dos templates
 env = Environment(loader=FileSystemLoader("./templates"))
-env.globals['now'] = datetime.now 
+env.globals['now'] = datetime.now
+
+# Logo embutido em base64 para que o email seja auto-contido
+_logo_path = os.environ.get("LOGO_PATH", "./templates/logo.png")
+if os.path.exists(_logo_path):
+    _ext = _logo_path.rsplit(".", 1)[-1].lower()
+    _mime = "image/svg+xml" if _ext == "svg" else f"image/{_ext}"
+    with open(_logo_path, "rb") as _f:
+        env.globals['logo_b64'] = f"data:{_mime};base64,{base64.b64encode(_f.read()).decode()}"
+    print(f"✅ Logo carregado: {_logo_path}")
+else:
+    env.globals['logo_b64'] = None
+    print(f"⚠️  Logo não encontrado em {_logo_path}: emails sem logo")
 
 def mask(value):
     if not value:

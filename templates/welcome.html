@@ -23,16 +23,8 @@
       .logo {
         display: block;
         margin: 0 auto 24px auto;
-        width: 64px;
-        height: 64px;
-        background: #16a34a;
-        border-radius: 16px;
-        text-align: center;
-        line-height: 64px;
-        font-size: 2rem;
-        color: #fff;
-        font-weight: bold;
-        letter-spacing: 2px;
+        max-height: 72px;
+        width: auto;
       }
       h1 {
         font-size: 1.5rem;
@@ -103,9 +95,7 @@
   </head>
   <body style="background: #e0e7ef;">
     <div class="container">
-      <div class="logo">
-        {{ logo|default('CAR') }}
-      </div>
+      {% if logo_b64 %}<img src="{{ logo_b64 }}" alt="{{ app }}" class="logo" />{% endif %}
       <h1>Bem-vindo!</h1>
       <p>Olá, <b>{{ name }}</b>!<br>
         Sua conta foi criada com sucesso!<br>
