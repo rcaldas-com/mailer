@@ -37,6 +37,9 @@
         <p class="row"><span class="label">Descrição:</span> <span class="value">{{ desc }}</span></p>
         {% endif %}
         <p class="row"><span class="label">Saldo total na carteira:</span> <span class="value">{{ total }}</span></p>
+        {% if receiptUrl %}
+        <p class="row"><span class="label">Comprovante:</span> <span class="value"><a href="{{ receiptUrl }}">Ver comprovante</a></span></p>
+        {% endif %}
       </div>
 
       <p style="font-size:0.95rem; color:#6b7280;">

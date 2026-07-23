@@ -47,6 +47,9 @@
           {% if proof %}
           <p class="row"><span class="label">Comprovante:</span> <span class="value">{{ proof }}</span></p>
           {% endif %}
+          {% if proofFileUrl %}
+          <p class="row"><span class="label">Arquivo:</span> <span class="value"><a href="{{ proofFileUrl }}">Ver comprovante</a></span></p>
+          {% endif %}
           {% if txHash %}
           <p class="row"><span class="label">Transação Stellar:</span> <span class="value hash">{{ txHash }}</span></p>
           {% endif %}
