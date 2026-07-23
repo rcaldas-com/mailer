@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Saque processado</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+      body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; }
+      .container { max-width: 420px; margin: 0 auto; background: #f9fafb; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 32px 20px; font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; }
+      .logo { display: block; margin: 0 auto 24px auto; max-height: 72px; width: auto; }
+      h1 { font-size: 1.4rem; color: #22223b; margin-bottom: 12px; text-align: center; }
+      p { color: #4b5563; font-size: 1rem; margin-bottom: 16px; text-align: center; }
+      .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
+      .row { display: flex; justify-content: space-between; font-size: 1rem; color: #374151; padding: 6px 0; }
+      .row .label { color: #6b7280; }
+      .row .value { font-weight: 600; color: #111827; word-break: break-all; }
+      .amount { font-size: 1.5rem; font-weight: 700; text-align: center; margin: 8px 0 4px 0; }
+      .ok { color: #059669; }
+      .no { color: #b91c1c; }
+      .hash { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.8rem; }
+      .footer { font-size: 0.9rem; color: #9ca3af; text-align: center; margin-top: 24px; }
+      @media (max-width: 480px) { .container { padding: 18px 4vw; } }
+    </style>
+  </head>
+  <body style="background: #e0e7ef;">
+    <div class="container">
+      {% if logo_url %}<img src="{{ logo_url }}" alt="{{ app }}" class="logo" />{% endif %}
+
+      {% if status == 'completed' %}
+        <h1>Saque concluido</h1>
+        <p>Ola, <b>{{ name }}</b>!<br>Seu saque foi processado com sucesso.</p>
+        <div class="amount ok">- {{ amount }} {{ coin }}</div>
+      {% else %}
+        <h1>Pedido de saque recusado</h1>
+        <p>Ola, <b>{{ name }}</b>!<br>Seu pedido de saque nao pode ser processado.</p>
+        <div class="amount no">{{ amount }} {{ coin }}</div>
+      {% endif %}
+
+      <div class="card">
+        {% if destination %}
+        <div class="row"><span class="label">Destino</span><span class="value">{{ destination }}</span></div>
+        {% endif %}
+        {% if status == 'completed' %}
+          {% if proof %}
+          <div class="row"><span class="label">Comprovante</span><span class="value">{{ proof }}</span></div>
+          {% endif %}
+          {% if txHash %}
+          <div class="row"><span class="label">Transacao Stellar</span><span class="value hash">{{ txHash }}</span></div>
+          {% endif %}
+        {% else %}
+          {% if reason %}
+          <div class="row"><span class="label">Motivo</span><span class="value">{{ reason }}</span></div>
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <p style="font-size:0.95rem; color:#6b7280;">
+        Acesse sua carteira para ver o saldo e o historico atualizados.
+      </p>
+
+      <div class="footer">
+        {{ app|capitalize }}<br>
+        &copy; {{ now().year }}
+      </div>
+    </div>
+  </body>
+</html>
