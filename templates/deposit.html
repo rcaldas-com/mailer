@@ -13,8 +13,9 @@
       h1 { font-size: 1.5rem; color: #22223b; margin-bottom: 12px; text-align: center; }
       p { color: #4b5563; font-size: 1rem; margin-bottom: 16px; text-align: center; }
       .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
-      .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; text-align: left; font-size: 1rem; color: #374151; margin: 4px 0; }
-      .row .label { color: #6b7280; }
+      .row { width: 100%; font-size: 1rem; color: #374151; margin: 4px 0; border-collapse: collapse; }
+      .row td { padding: 0; }
+      .row .label { color: #6b7280; text-align: left; }
       .row .value { font-weight: 600; color: #111827; text-align: right; }
       .amount { font-size: 1.6rem; font-weight: 700; color: #059669; text-align: center; margin: 8px 0 4px 0; }
       .footer { font-size: 0.9rem; color: #9ca3af; text-align: center; margin-top: 24px; }
@@ -34,11 +35,20 @@
 
       <div class="card">
         {% if desc %}
-        <p class="row"><span class="label">Descrição:</span> <span class="value">{{ desc }}</span></p>
+        <table class="row" cellpadding="0" cellspacing="0" role="presentation"><tr>
+          <td class="label">Descrição:</td>
+          <td class="value">{{ desc }}</td>
+        </tr></table>
         {% endif %}
-        <p class="row"><span class="label">Saldo total na carteira:</span> <span class="value">{{ total }}</span></p>
+        <table class="row" cellpadding="0" cellspacing="0" role="presentation"><tr>
+          <td class="label">Saldo total na carteira:</td>
+          <td class="value">{{ total }}</td>
+        </tr></table>
         {% if receiptUrl %}
-        <p class="row"><span class="label">Comprovante:</span> <span class="value"><a href="{{ receiptUrl }}">Ver comprovante</a></span></p>
+        <table class="row" cellpadding="0" cellspacing="0" role="presentation"><tr>
+          <td class="label">Comprovante:</td>
+          <td class="value"><a href="{{ receiptUrl }}">Ver comprovante</a></td>
+        </tr></table>
         {% endif %}
       </div>
 

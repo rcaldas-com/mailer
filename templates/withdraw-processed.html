@@ -13,8 +13,9 @@
       h1 { font-size: 1.4rem; color: #22223b; margin-bottom: 12px; text-align: center; }
       p { color: #4b5563; font-size: 1rem; margin-bottom: 16px; text-align: center; }
       .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin: 20px 0; }
-      .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; text-align: left; font-size: 1rem; color: #374151; margin: 4px 0; }
-      .row .label { color: #6b7280; flex-shrink: 0; }
+      .row { width: 100%; font-size: 1rem; color: #374151; margin: 4px 0; border-collapse: collapse; }
+      .row td { padding: 0; }
+      .row .label { color: #6b7280; text-align: left; white-space: nowrap; }
       .row .value { font-weight: 600; color: #111827; word-break: break-all; text-align: right; }
       .amount { font-size: 1.5rem; font-weight: 700; text-align: center; margin: 8px 0 4px 0; }
       .ok { color: #059669; }
@@ -41,21 +42,36 @@
 
       <div class="card">
         {% if destination %}
-        <p class="row"><span class="label">Destino:</span> <span class="value">{{ destination }}</span></p>
+        <table class="row" cellpadding="0" cellspacing="0" role="presentation"><tr>
+          <td class="label">Destino:</td>
+          <td class="value">{{ destination }}</td>
+        </tr></table>
         {% endif %}
         {% if status == 'completed' %}
           {% if proof %}
-          <p class="row"><span class="label">Comprovante:</span> <span class="value">{{ proof }}</span></p>
+          <table class="row" cellpadding="0" cellspacing="0" role="presentation"><tr>
+            <td class="label">Comprovante:</td>
+            <td class="value">{{ proof }}</td>
+          </tr></table>
           {% endif %}
           {% if proofFileUrl %}
-          <p class="row"><span class="label">Arquivo:</span> <span class="value"><a href="{{ proofFileUrl }}">Ver comprovante</a></span></p>
+          <table class="row" cellpadding="0" cellspacing="0" role="presentation"><tr>
+            <td class="label">Arquivo:</td>
+            <td class="value"><a href="{{ proofFileUrl }}">Ver comprovante</a></td>
+          </tr></table>
           {% endif %}
           {% if txHash %}
-          <p class="row"><span class="label">Transação Stellar:</span> <span class="value hash">{{ txHash }}</span></p>
+          <table class="row" cellpadding="0" cellspacing="0" role="presentation"><tr>
+            <td class="label">Transação Stellar:</td>
+            <td class="value hash">{{ txHash }}</td>
+          </tr></table>
           {% endif %}
         {% else %}
           {% if reason %}
-          <p class="row"><span class="label">Motivo:</span> <span class="value">{{ reason }}</span></p>
+          <table class="row" cellpadding="0" cellspacing="0" role="presentation"><tr>
+            <td class="label">Motivo:</td>
+            <td class="value">{{ reason }}</td>
+          </tr></table>
           {% endif %}
         {% endif %}
       </div>
